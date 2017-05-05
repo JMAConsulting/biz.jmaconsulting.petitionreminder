@@ -114,19 +114,27 @@ function petitionreminder_civicrm_alterSettingsFolders(&$metaDataFolders = NULL)
  */
 function petitionreminder_civicrm_buildForm($formName, &$form) {
   if ($formName == "CRM_Campaign_Form_Petition_Signature") {
-    $tags = CRM_Core_Smarty::singleton()->get_template_vars('tag');
-    if (isset($tags)) {
-      foreach ($tags as $key => &$tag) {
-        if ($tag['name'] != "Renewable Kootenays") {
-          unset($tags[$key]);
-        }
-        else {
-          $tag['name'] = ts("Might Volunteer - Renewable Kootenays");
-        }
-      }
-      $form->assign('tag', $tags);
-      $form->assign('tree', $tags);
-      $form->assign('tagCount', count($tags));
+    $form->add('checkbox', 'volunteer_tag', ts('Would you like to volunteer for the Renewable Kootenays Team?'));
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => 'CRM/Petitionreminder/Form/Signature.tpl',
+    ));
+  }
+}
+
+/**
+ * Implements hook_civicrm_postProcess().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_postProcess
+ *
+ */
+function petitionreminder_civicrm_postProcess($formName, &$form) {
+  if ($formName == "CRM_Campaign_Form_Petition_Signature") {
+    if (CRM_Utils_Array::value('volunteer_tag', $form->_submitValues)) {
+      $params = array(
+        'contact_id' => $form->_contactId,
+        'tag_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Tag', 'Might Volunteer-Renewable Kootenays', 'id', 'name'),
+      );
+      civicrm_api3('EntityTag', 'create', $params);
     }
   }
 }
